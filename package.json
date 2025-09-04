@@ -1,0 +1,16 @@
+{
+  "name": "unitv-projeto-completo",
+  "version": "1.0.0",
+  "description": "Projeto completo com frontend e backend para a UniTV CAPI.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7"
+  }
+}
+
