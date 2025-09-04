@@ -53,8 +53,6 @@
     .muted{color:var(--muted)}
     body.variant-c .plan-btn, body.variant-c .plan-btn .label, body.variant-c .plan-btn .price{background:var(--accent);color:#0b0d12}
     @media (min-width:480px){ .plans{grid-template-columns:repeat(2,1fr)} .plan-btn{min-height:110px} }
-
-    /* styles.css — complementares v4 */
   </style>
 
   <!-- Meta Pixel (ativo) -->
@@ -71,6 +69,8 @@
   src="https://www.facebook.com/tr?id=222356937447578&ev=PageView&noscript=1"
   /></noscript>
 
+  <link rel="preload" href="styles.css" as="style">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="wrap">
@@ -208,211 +208,8 @@
   </section>
 
   <script>window.dataLayer = window.dataLayer || [];</script>
-  <script defer>
-    // app.js — UniTV LP Fantasma v4 (Pixel ativo)
-    (() => {
-      const PHONE_E164 = "5591993460263"; // WhatsApp E.164
-      const PLAN_MESSAGES = {
-        essencial: "Quero ativar o Plano R$10/mês agora. PIX ok.",
-        combos: "Quero ativar um Combo (3/6/12 meses). PIX ok."
-      };
-
-      function getUTMs() {
-        const params = new URLSearchParams(window.location.search);
-        const keys = ["utm_source","utm_medium","utm_campaign"];
-        keys.forEach(k => { if (params.get(k)) sessionStorage.setItem(k, params.get(k)); });
-        const data = {}; keys.forEach(k => data[k] = sessionStorage.getItem(k) || "");
-        return data;
-      }
-
-      function utmSuffix() {
-        const u = getUTMs();
-        const parts = [];
-        if (u.utm_source) parts.push(`source=${u.utm_source}`);
-        if (u.utm_medium) parts.push(`medium=${u.utm_medium}`);
-        if (u.utm_campaign) parts.push(`campaign=${u.utm_campaign}`);
-        return parts.length ? ` utm: ${parts.join("|")}` : "";
-      }
-
-      function buildWaLink(plan, action) {
-        const base = `https://wa.me/${PHONE_E164}`;
-        const msgBase = PLAN_MESSAGES[plan] || "Quero ativar agora.";
-        const msg = `${msgBase}${utmSuffix()}`.trim();
-        const url = `${base}?text=${encodeURIComponent(msg)}`;
-        window.dataLayer.push({event: "WhatsAppClick", plan, action});
-        if (typeof fbq === 'function') {
-          try { fbq('trackCustom','WhatsAppClick',{plan, action}); } catch(e){}
-          try { fbq('track','Contact'); } catch(e){}
-        }
-        return url;
-      }
-
-      const backdrop = document.getElementById("sheetBackdrop");
-      let openSheet = null; let startY = null;
-
-      function lockBody(lock) {
-        document.documentElement.style.overflow = lock ? "hidden" : "";
-        document.body.style.overflow = lock ? "hidden" : "";
-      }
-      function openDialog(sheetEl, plan) {
-        if (openSheet) closeDialog(openSheet);
-        openSheet = sheetEl;
-        sheetEl.classList.add("open");
-        backdrop.classList.add("show");
-        lockBody(true);
-        const focusEl = sheetEl.querySelector(".btn-primary") || sheetEl.querySelector("button");
-        if (focusEl) focusEl.focus();
-        window.dataLayer.push({event: "ViewPlanSheet", plan});
-        if (typeof fbq === 'function') { try { fbq('trackCustom','ViewPlanSheet',{plan}); } catch(e){} }
-      }
-      function closeDialog(sheetEl) {
-        sheetEl.classList.remove("open");
-        backdrop.classList.remove("show");
-        lockBody(false);
-        openSheet = null;
-      }
-
-      backdrop.addEventListener("click", () => { if (openSheet) closeDialog(openSheet); });
-      window.addEventListener("keydown", (e) => { if (e.key === "Escape" && openSheet) closeDialog(openSheet); });
-      document.querySelectorAll(".sheet").forEach(sheet => {
-        sheet.addEventListener("touchstart", (e) => { startY = e.touches[0].clientY; }, {passive:true});
-        sheet.addEventListener("touchmove", (e) => {
-          if (startY === null) return;
-          const dy = e.touches[0].clientY - startY;
-          if (dy > 40) { closeDialog(sheet); startY = null; }
-        }, {passive:true});
-      });
-
-      document.getElementById("planList").addEventListener("click", (e) => {
-        const btn = e.target.closest(".plan-btn");
-        if (!btn) return;
-        const plan = btn.dataset.plan;
-        const targetId = btn.getAttribute("aria-controls");
-        const sheet = document.getElementById(targetId);
-        if (sheet) {
-          window.dataLayer.push({event:"PlanSelected", plan});
-          if (typeof fbq === 'function') { try { fbq('trackCustom','PlanSelected',{plan}); } catch(e){} }
-          openDialog(sheet, plan);
-        }
-      });
-
-      document.querySelectorAll(".sheet .cta-bar").forEach(bar => {
-        bar.addEventListener("click", (e) => {
-          const btn = e.target.closest("button[data-action]");
-          if (!btn) return;
-          const action = btn.dataset.action;
-          const plan = btn.dataset.plan;
-          const url = buildWaLink(plan, action);
-          window.location.href = url;
-        });
-      });
-
-      window.addEventListener("load", () => {
-        document.querySelectorAll(".kick").forEach(el => { setTimeout(() => el.classList.remove("kick"), 900); });
-      });
-    })();
-  </script>
-  <script defer>
-    // capi-hook.js
-    // Drop-in client hook to generate eventID, fire Pixel (if present)
-    // and send the same event to CAPI via sendBeacon/fetch BEFORE navigation.
-    // Include AFTER your app.js <script>.
-    //
-    // It listens to clicks on buttons inside bottom sheets with [data-action][data-plan].
-    // Works alongside your existing handlers.
-
-    (function () {
-      function uuidv4() {
-        if (crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
-        // Fallback RFC4122-ish
-        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-          const r = (Math.random() * 16) | 0;
-          const v = c === "x" ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        });
-      }
-
-      function getCookie(name) {
-        const m = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-        return m ? decodeURIComponent(m[2]) : null;
-      }
-
-      function getUTMs() {
-        const keys = ["utm_source", "utm_medium", "utm_campaign"];
-        const u = {};
-        const qs = new URLSearchParams(location.search);
-        keys.forEach((k) => {
-          const v = qs.get(k) || sessionStorage.getItem(k);
-          if (v) {
-            u[k] = v;
-            sessionStorage.setItem(k, v);
-          }
-        });
-        const parts = [];
-        if (u.utm_source) parts.push("source=" + u.utm_source);
-        if (u.utm_medium) parts.push("medium=" + u.utm_medium);
-        if (u.utm_campaign) parts.push("campaign=" + u.utm_campaign);
-        return parts.length ? "utm: " + parts.join("|") : "";
-      }
-
-      function sendCapi(payload) {
-        const url = "/.netlify/functions/capi";
-        const body = JSON.stringify(payload);
-        if (navigator.sendBeacon) {
-          const blob = new Blob([body], { type: "application/json" });
-          navigator.sendBeacon(url, blob);
-        } else {
-          fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body });
-        }
-      }
-
-      document.addEventListener(
-        "click",
-        function (e) {
-          const btn = e.target.closest("button[data-action][data-plan]");
-          if (!btn) return;
-
-          const plan = btn.getAttribute("data-plan");
-          const action = btn.getAttribute("data-action");
-          const eventID = uuidv4();
-
-          // Fire Pixel (if present) with eventID for dedup
-          try {
-            if (window.fbq) {
-              window.fbq("trackCustom", "WhatsAppClick", { eventID, plan, action });
-            }
-          } catch (err) {
-            // no-op
-          }
-
-          // Build user_data helpers
-          const fbp = getCookie("_fbp");
-          const fbcCookie = getCookie("_fbc");
-          const qs = new URLSearchParams(location.search);
-          const fbclid = qs.get("fbclid");
-          const utm = getUTMs();
-          const phone =
-            window.PHONE_E164 ||
-            (typeof PHONE_E164 !== "undefined" ? PHONE_E164 : null);
-
-          // Ship to CAPI (server)
-          sendCapi({
-            event_name: "WhatsAppClick",
-            event_id: eventID, // must match the Pixel eventID
-            plan,
-            action,
-            utm,
-            phone,
-            fbp,
-            fbc: fbcCookie,
-            fbclid
-          });
-        },
-        true // capture so we run before your navigation
-      );
-    })();
-  </script>
+  <script src="app.js" defer></script>
+  <script src="capi-hook.js" defer></script>
 </body>
 </html>
-
 
