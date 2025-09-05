@@ -1,6 +1,7 @@
 // app.js — UniTV LP Fantasma v4 (Pixel ativo)
 (() => {
-  const PHONE_E164 = "5591982734406"; // WhatsApp E.164
+  // NÚMERO DE WHATSAPP CORRIGIDO
+  const PHONE_E164 = "5591993460263"; // WhatsApp E.164
   const PLAN_MESSAGES = {
     essencial: "Quero ativar o Plano R$10/mês agora. PIX ok.",
     combos: "Quero ativar um Combo (3/6/12 meses). PIX ok."
@@ -28,11 +29,7 @@
     const msgBase = PLAN_MESSAGES[plan] || "Quero ativar agora.";
     const msg = `${msgBase}${utmSuffix()}`.trim();
     const url = `${base}?text=${encodeURIComponent(msg)}`;
-    window.dataLayer.push({event: "WhatsAppClick", plan, action});
-    if (typeof fbq === 'function') {
-      try { fbq('trackCustom','WhatsAppClick',{plan, action}); } catch(e){}
-      try { fbq('track','Contact'); } catch(e){}
-    }
+    // O dataLayer push e fbq calls foram movidos para o capi-hook.js para garantir o envio
     return url;
   }
 
@@ -51,8 +48,7 @@
     lockBody(true);
     const focusEl = sheetEl.querySelector(".btn-primary") || sheetEl.querySelector("button");
     if (focusEl) focusEl.focus();
-    window.dataLayer.push({event: "ViewPlanSheet", plan});
-    if (typeof fbq === 'function') { try { fbq('trackCustom','ViewPlanSheet',{plan}); } catch(e){} }
+    // O envio de eventos agora é centralizado no capi-hook.js
   }
   function closeDialog(sheetEl) {
     sheetEl.classList.remove("open");
@@ -79,8 +75,6 @@
     const targetId = btn.getAttribute("aria-controls");
     const sheet = document.getElementById(targetId);
     if (sheet) {
-      window.dataLayer.push({event:"PlanSelected", plan});
-      if (typeof fbq === 'function') { try { fbq('trackCustom','PlanSelected',{plan}); } catch(e){} }
       openDialog(sheet, plan);
     }
   });
@@ -92,6 +86,7 @@
       const action = btn.dataset.action;
       const plan = btn.dataset.plan;
       const url = buildWaLink(plan, action);
+      // Redireciona o utilizador para o WhatsApp
       window.location.href = url;
     });
   });
